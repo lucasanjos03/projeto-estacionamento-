@@ -39,5 +39,4 @@ def menu_inicial():
         else:
             print("Opção inválida. Tente novamente.\n")
 
-# Iniciar o sistema
 menu_inicial()
