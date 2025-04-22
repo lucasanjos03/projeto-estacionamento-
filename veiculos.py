@@ -10,11 +10,19 @@ def cadastrar_veiculo():
         print("⚠️ Veículo já cadastrado!")
         return
 
-    cor = input("Cor: ")
-    modelo = input("Modelo: ")
-    marca = input("Marca: ")
-    nome = input("Nome do proprietário: ")
-    telefone = input("Telefone do proprietário: ")
+    try:
+        cor = input("Cor: ")
+        modelo = input("Modelo: ")
+        marca = input("Marca: ")
+        nome = input("Nome do proprietário: ")
+        telefone = int(input("Telefone do proprietário: "))
+
+        if any(char.isdigit() for char in cor + modelo + marca + nome):
+            raise ValueError("Campos de texto não devem conter números.")
+
+    except (ValueError, IndexError):
+        print("❌ Dados inválidos. Verifique se digitou apenas letras e números corretamente.\n")
+        return
 
     veiculos[placa] = {
         "cor": cor,
@@ -25,6 +33,10 @@ def cadastrar_veiculo():
             "telefone": telefone
         }
     }
+
+    salvar_dados(ARQ_VEICULOS, veiculos)
+    print("✅ Veículo cadastrado com sucesso!\n")
+
 
     salvar_dados(ARQ_VEICULOS, veiculos)
     print("✅ Veículo cadastrado com sucesso!\n")
