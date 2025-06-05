@@ -1,3 +1,4 @@
+import bcrypt
 from conexao import conectar
 
 def inicializar_admin():
@@ -10,9 +11,10 @@ def inicializar_admin():
         
         cur.execute("SELECT id_funcionario FROM funcionarios WHERE usuario = 'admin'")
         if not cur.fetchone():
+            senha_hash = bcrypt.hashpw('1234'.encode(), bcrypt.gensalt()).decode()
             cur.execute(
                 "INSERT INTO funcionarios (usuario, senha) VALUES (%s, %s)",
-                ('admin', '1234')
+                ('admin', senha_hash)
             )
             conn.commit()
         cur.close()
@@ -22,7 +24,7 @@ def inicializar_admin():
         if conn:
             conn.close()
 
-def login():
+def login(return_user=False):
     
     print("\n--- LOGIN ---")
     usuario = input("Usuário: ").strip()
@@ -31,27 +33,27 @@ def login():
     try:
         conn = conectar()
         if not conn:
-            return False
+            return False if not return_user else None
         cur = conn.cursor()
 
         cur.execute(
-            "SELECT 1 FROM funcionarios WHERE usuario = %s AND senha = %s",
-            (usuario, senha)
+            "SELECT senha FROM funcionarios WHERE usuario = %s",
+            (usuario,)
         )
-        existe = cur.fetchone() is not None
+        row = cur.fetchone()
         cur.close()
         conn.close()
 
-        if existe:
+        if row and bcrypt.checkpw(senha.encode(), row[0].encode()):
             print("✅ Login bem-sucedido!\n")
-            return True
+            return usuario if return_user else True
         else:
             print("❌ Usuário ou senha incorretos.\n")
-            return False
+            return False if not return_user else None
 
     except Exception as e:
         print("Erro no login:", e)
-        return False
+        return False if not return_user else None
 
 def adicionar_usuario():
     
@@ -73,9 +75,10 @@ def adicionar_usuario():
             return
 
         senha = input("Nova senha: ").strip()
+        senha_hash = bcrypt.hashpw(senha.encode(), bcrypt.gensalt()).decode()
         cur.execute(
             "INSERT INTO funcionarios (usuario, senha) VALUES (%s, %s)",
-            (usuario, senha)
+            (usuario, senha_hash)
         )
         conn.commit()
         cur.close()
@@ -142,7 +145,8 @@ def alterar_usuario():
         if novo_usuario:
             cur.execute("UPDATE funcionarios SET usuario = %s WHERE id_funcionario = %s", (novo_usuario, id_funcionario))
         if nova_senha:
-            cur.execute("UPDATE funcionarios SET senha = %s WHERE id_funcionario = %s", (nova_senha, id_funcionario))
+            senha_hash = bcrypt.hashpw(nova_senha.encode(), bcrypt.gensalt()).decode()
+            cur.execute("UPDATE funcionarios SET senha = %s WHERE id_funcionario = %s", (senha_hash, id_funcionario))
         if novo_usuario or nova_senha:
             conn.commit()
             print("✅ Usuário alterado com sucesso!\n")

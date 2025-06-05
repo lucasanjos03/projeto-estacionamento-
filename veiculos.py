@@ -1,6 +1,6 @@
 from conexao import conectar
 
-def cadastrar_veiculo():
+def cadastrar_veiculo(usuario_logado):
     
     print("\n--- CADASTRAR VEÍCULO ---")
 
@@ -33,10 +33,20 @@ def cadastrar_veiculo():
         )
         id_proprietario = cur.fetchone()[0]
 
+        # Buscar id_funcionario do usuário logado
+        cur.execute("SELECT id_funcionario FROM funcionarios WHERE usuario = %s", (usuario_logado,))
+        row = cur.fetchone()
+        if not row:
+            print("Usuário logado não encontrado no banco.")
+            cur.close()
+            conn.close()
+            return
+        id_funcionario = row[0]
+
         
         cur.execute(
-            "INSERT INTO carros (id_proprietario, cor, modelo, marca, placa) VALUES (%s, %s, %s, %s, %s)",
-            (id_proprietario, cor, modelo, marca, placa)
+            "INSERT INTO carros (id_proprietario, cor, modelo, marca, placa, id_funcionario) VALUES (%s, %s, %s, %s, %s, %s)",
+            (id_proprietario, cor, modelo, marca, placa, id_funcionario)
         )
 
         conn.commit()
@@ -100,21 +110,27 @@ def listar_veiculos_com_usuario():
         if not conn:
             return
         cur = conn.cursor()
-        cur.execute("""
-            SELECT 
-                c.placa,
-                c.marca,
-                c.modelo,
-                c.cor,
-                p.nome,
-                p.telefone,
-                f.usuario
-            FROM carros c
-            JOIN proprietarios p ON c.id_proprietario = p.id_proprietario
-            LEFT JOIN funcionarios f ON c.id_funcionario = f.id_funcionario
-            ORDER BY c.placa;
-        """)
-        resultados = cur.fetchall()
+        try:
+            cur.execute("""
+                SELECT 
+                    c.placa,
+                    c.marca,
+                    c.modelo,
+                    c.cor,
+                    p.nome,
+                    p.telefone,
+                    f.usuario
+                FROM carros c
+                JOIN proprietarios p ON c.id_proprietario = p.id_proprietario
+                LEFT JOIN funcionarios f ON c.id_funcionario = f.id_funcionario
+                ORDER BY c.placa;
+            """)
+            resultados = cur.fetchall()
+        except Exception as e:
+            print("❌ Não é possível mostrar o usuário que cadastrou porque a coluna 'id_funcionario' não existe na tabela 'carros'.\n")
+            cur.close()
+            conn.close()
+            return
 
         if not resultados:
             print("Nenhum veículo cadastrado.\n")

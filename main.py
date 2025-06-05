@@ -2,7 +2,7 @@ from usuarios import login, adicionar_usuario, inicializar_admin, deletar_usuari
 from veiculos import cadastrar_veiculo, listar_veiculos_com_usuario
 
 
-def menu_principal():
+def menu_principal(usuario_logado):
     while True:
         print("==== MENU PRINCIPAL ====")
         print("1. Cadastrar veículo")
@@ -13,7 +13,7 @@ def menu_principal():
         opcao = input("Escolha uma opção: ").strip()
 
         if opcao == '1':
-            cadastrar_veiculo()
+            cadastrar_veiculo(usuario_logado)
         elif opcao == '2':
             listar_veiculos_com_usuario()
         elif opcao == '3':
@@ -38,8 +38,9 @@ def menu_inicial():
         opcao = input("Escolha uma opção: ").strip()
 
         if opcao == '1':
-            if login():
-                menu_principal()
+            usuario_logado = login(return_user=True)
+            if usuario_logado:
+                menu_principal(usuario_logado)
         elif opcao == '2':
             adicionar_usuario()
         elif opcao == '3':
