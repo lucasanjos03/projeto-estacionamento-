@@ -27,13 +27,6 @@ def cadastrar_veiculo(usuario_logado):
         telefone = input("Telefone do proprietário (apenas números): ").strip()
 
         
-        cur.execute(
-            "INSERT INTO proprietarios (nome, telefone) VALUES (%s, %s) RETURNING id_proprietario",
-            (nome, telefone)
-        )
-        id_proprietario = cur.fetchone()[0]
-
-        # Buscar id_funcionario do usuário logado
         cur.execute("SELECT id_funcionario FROM funcionarios WHERE usuario = %s", (usuario_logado,))
         row = cur.fetchone()
         if not row:
@@ -42,6 +35,13 @@ def cadastrar_veiculo(usuario_logado):
             conn.close()
             return
         id_funcionario = row[0]
+
+        
+        cur.execute(
+            "INSERT INTO proprietarios (nome, telefone) VALUES (%s, %s) RETURNING id_proprietario",
+            (nome, telefone)
+        )
+        id_proprietario = cur.fetchone()[0]
 
         
         cur.execute(
